@@ -1,5 +1,5 @@
 # Polymarket Arbitrage Bot
-
+🔔关注我的X获得更多有用信息：https://x.com/Jlbcode
 ## 项目简介
 
 本项目是一个用于Polymarket平台的套利机器人，支持自动化市场查询、余额检测、自动交易等功能。通过配置API密钥和相关参数，机器人可自动执行套利策略，帮助用户在Polymarket市场中实现收益最大化。
