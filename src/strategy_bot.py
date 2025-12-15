@@ -225,7 +225,7 @@ class SimpleArbitrageBot:
         up_diff = abs(price_up - best_up)
         down_diff = abs(price_down - best_down)
         
-        if (up_diff > 0.03 and down_diff > 0.03) or (up_diff + down_diff > 0.04):
+        if (up_diff > 0.03 and down_diff > 0.03) or (up_diff + down_diff > 0.05):
             logger.warning(f"差价过高: UP差价={up_diff:.4f}, DOWN差价={down_diff:.4f}, 总差价={up_diff + down_diff:.4f}")
             return None
         
@@ -323,7 +323,6 @@ class SimpleArbitrageBot:
                 logger.info(f"当前市场交易进度: {self.current_market_trades}/{self.settings.max_trades_per_market}")
         
         if self.settings.dry_run:
-            logger.info("🔸 模拟模式 - 不会执行真实订单")
             logger.info("=" * 70)
             # 跟踪模拟投资
             self.total_invested += opportunity['total_investment']

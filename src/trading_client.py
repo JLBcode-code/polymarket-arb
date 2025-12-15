@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import BalanceAllowanceParams, AssetType, OrderArgs, OrderType
+from py_clob_client.clob_types import BalanceAllowanceParams, AssetType, OrderArgs, OrderType, PostOrdersArgs
 from py_clob_client.order_builder.constants import BUY, SELL
 
 from config import Settings
@@ -107,21 +107,17 @@ def place_order(settings: Settings, *, side: str, token_id: str, price: float, s
 def place_orders_fast(settings: Settings, orders: list[dict]) -> list[dict]:
     """
     尽可能快地提交多个订单。
-    
     策略：先预签所有订单，然后快速连续提交。
     这样可以最小化订单提交之间的时间间隔。
-    
     参数:
         settings: 机器人设置
         orders: 订单字典列表，包含键: side, token_id, price, size
-        
     返回:
         订单结果列表
     """
     client = get_client(settings)
-    
-    # 步骤1：预签所有订单（这是慢的部分）
-    signed_orders = []
+
+    post_args: list[PostOrdersArgs] = []
     for order_params in orders:
         side_up = order_params["side"].upper()
         order_args = OrderArgs(
@@ -131,18 +127,13 @@ def place_orders_fast(settings: Settings, orders: list[dict]) -> list[dict]:
             side=BUY if side_up == "BUY" else SELL
         )
         signed_order = client.create_order(order_args)
-        signed_orders.append(signed_order)
-    
-    # 步骤2：尽可能快地提交所有订单（GTC = 保留在订单簿中直到成交）
-    results = []
-    for signed_order in signed_orders:
-        try:
-            result = client.post_order(signed_order, OrderType.GTC)
-            results.append(result)
-        except Exception as e:
-            results.append({"error": str(e)})
-    
-    return results
+        post_args.append(PostOrdersArgs(order=signed_order, orderType=OrderType.GTC))
+
+    try:
+        # 批量提交签好的订单，减少出单间隔
+        return client.post_orders(post_args)
+    except Exception as exc:
+        return [{"error": str(exc)}]
 
 
 def get_positions(settings: Settings, token_ids: list[str] = None) -> dict:
